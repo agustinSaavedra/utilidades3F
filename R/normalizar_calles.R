@@ -12,15 +12,23 @@ diccionario_calles <- obtener_capa("relevamiento_callejero") |>
 # tokenizacion y emparejamiento
 tokens_similitud <- function(nombre_org, nombres_normalizados){
   # tokenizacion de nombres originales
+  
+  
+  nombres_comunes <- c("gral paz", "lacroze", "zavatarro", "j.b. justo", "ruta 8", "perez galdos", 
+                       "wernicke", "cafferata", "lincol", "gral lavalle")
+  nombres_reales <- c("avenida general jose maria paz","federico lacroze","pedro jose luis zavatarro","avenida juan b justo",
+                      "avenida eva duarte de peron","benito perez galdos","german wernicke","agustin cafferata", "abraham lincoln",
+                      "general juan galo lavalle")
+  
+  nombres_coloquiales <- data.frame(nombres_comunes = nombres_comunes, nombres_reales = nombres_reales)
+  rm(nombres_comunes, nombres_reales)
+  
+  nombres_normalizados <- c(nombres_normalizados, nombres_coloquiales$nombres_comunes)
+  
   nombre_org <- stringi::stri_trans_general(tolower(nombre_org),"Latin-ASCII")
   nombre_org <- gsub("\\.", "", nombre_org)
-  nombre_org <- ifelse(nombre_org == "ruta 8", "avenida eva duarte de peron", nombre_org)
-  #nombre_org <- ifelse(nombre_org == "gral paz" | nombre_org == "gral paz",
-  #                     "avenida general jose maria paz", nombre_org)
-  
   tokens_org <- unlist(stringr::str_split(nombre_org, " "))
-  tokens_org[1] <- ifelse(tokens_org[1] == "gral", "general", tokens_org[1])
-  
+
   print(tokens_org)
 
 
@@ -29,27 +37,31 @@ tokens_similitud <- function(nombre_org, nombres_normalizados){
   mejor_puntaje <- -1
   
   # revisión de nombres normalizados
-  for (nombre_norm in nombres_normalizados) {
+  for (nombre_norm in 1:length(nombres_normalizados)) {
     # tokenizacion de nombres correctos
-    token_norm <- unlist(stringr::str_split(nombre_norm, " "))
+    token_norm <- unlist(stringr::str_split(nombres_normalizados[nombre_norm], " "))
     
     # encontrar token compartidos entre los nombres originales y normalizados
-    tokens_comunes <- intersect(tolower(tokens_org), tolower(token_norm))
+    tokens_en_comun <- intersect(tolower(tokens_org), tolower(token_norm))
     
     # calculo de similitud
-    puntaje_tokens <-  length(tokens_comunes) / (length(token_norm) *0.5)
+    puntaje_tokens <-  length(tokens_en_comun) / (length(token_norm))
     
     # Cálculo de similitud basado en distancia de cadena (Levenshtein)
-    distancia <- stringdist::stringdist(nombre_org, nombre_norm, method = "lv")
-    puntaje_distancia <- 1 / (1 + distancia) 
     
+    distancia <- stringdist::stringdist(nombre_org, nombres_normalizados[nombre_norm], method = "lv")
+    puntaje_distancia <- 1/(1+distancia)
+    
+    nombres_normalizados[nombre_norm] <- ifelse(nombres_normalizados[nombre_norm] %in% nombres_coloquiales$nombres_comunes, 
+                                                nombres_coloquiales$nombres_reales[nombres_coloquiales$nombres_comunes == nombres_normalizados[nombre_norm]],
+                                                nombres_normalizados[nombre_norm])
     #puntaje final
     
     puntaje <- (puntaje_tokens + puntaje_distancia) / 2
     
     # actualización de mejor emparejamiento
     if (puntaje > mejor_puntaje) {
-      mejor_empareja <- nombre_norm
+      mejor_empareja <- nombres_normalizados[nombre_norm]
       mejor_puntaje <- puntaje
     }
   }
