@@ -15,10 +15,10 @@ tokens_similitud <- function(nombre_org, nombres_normalizados){
   
   
   nombres_comunes <- c("gral paz", "lacroze", "zavatarro", "j.b. justo", "ruta 8", "perez galdos", 
-                       "wernicke", "cafferata", "lincol", "gral lavalle")
+                       "wernicke", "cafferata", "lincol", "gral lavalle", "padre elizalde")
   nombres_reales <- c("avenida general jose maria paz","federico lacroze","pedro jose luis zavatarro","avenida juan b justo",
                       "avenida eva duarte de peron","benito perez galdos","german wernicke","agustin cafferata", "abraham lincoln",
-                      "general juan galo lavalle")
+                      "general juan galo lavalle", "padre agustin gabriel bonney elizalde")
   
   nombres_coloquiales <- data.frame(nombres_comunes = nombres_comunes, nombres_reales = nombres_reales)
   rm(nombres_comunes, nombres_reales)
