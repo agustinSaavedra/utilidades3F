@@ -10,12 +10,21 @@ diccionario_calles <- obtener_capa("relevamiento_callejero") |>
 
 
 # tokenizacion y emparejamiento
-tokens_similitud <- function(nombre_org, nombres_normalizados) {
+tokens_similitud <- function(nombre_org, nombres_normalizados){
   # tokenizacion de nombres originales
   nombre_org <- stringi::stri_trans_general(tolower(nombre_org),"Latin-ASCII")
-  tokens_org <- unlist(stringr::str_split(nombre_org, " "))
+  nombre_org <- gsub("\\.", "", nombre_org)
+  nombre_org <- ifelse(nombre_org == "ruta 8", "avenida eva duarte de peron", nombre_org)
+  #nombre_org <- ifelse(nombre_org == "gral paz" | nombre_org == "gral paz",
+  #                     "avenida general jose maria paz", nombre_org)
   
-  # asignación de puntaje
+  tokens_org <- unlist(stringr::str_split(nombre_org, " "))
+  tokens_org[1] <- ifelse(tokens_org[1] == "gral", "general", tokens_org[1])
+  
+  print(tokens_org)
+
+
+  #asignación de puntaje
   mejor_empareja <- ""
   mejor_puntaje <- -1
   
@@ -28,7 +37,7 @@ tokens_similitud <- function(nombre_org, nombres_normalizados) {
     tokens_comunes <- intersect(tolower(tokens_org), tolower(token_norm))
     
     # calculo de similitud
-    puntaje_tokens <- length(tokens_comunes) / length(token_norm)
+    puntaje_tokens <-  length(tokens_comunes) / (length(token_norm) *0.5)
     
     # Cálculo de similitud basado en distancia de cadena (Levenshtein)
     distancia <- stringdist::stringdist(nombre_org, nombre_norm, method = "lv")
@@ -64,3 +73,4 @@ normalizar_calles <- function(df, nombre_calles) {
     dplyr::mutate(nombre_normalizado = tokens_similitud(!!dplyr::sym(nombre_calles), diccionario_calles$nombre_simp))
   return(df)
 }  
+   
